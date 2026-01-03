@@ -5,7 +5,7 @@ import CowDetail from './components/CowDetail';
 import ActionLists from './components/ActionLists';
 import { initialCows, initialEvents } from './data/mockData';
 import { Cow, CowEvent, Protocol, ProtocolInstance } from './types';
-import { LayoutDashboard, ClipboardList, Syringe, TestTube2, Settings, Users, ArrowRight, CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, Syringe, TestTube2, Settings, Users, ArrowRight, CheckCircle2, AlertCircle, X, Plus, Trash2 } from 'lucide-react';
 import { translations, Language, DateFormat } from './utils/helpers';
 
 // Seed Protocols
@@ -42,6 +42,10 @@ export default function App() {
   const [protocols, setProtocols] = useState<Protocol[]>(initialProtocols);
   const [protocolInstances, setProtocolInstances] = useState<ProtocolInstance[]>([]);
   
+  // Staff Lists (Lifted State)
+  const [managers, setManagers] = useState<string[]>(['John Doe', 'Jane Smith', 'Farm Manager']);
+  const [inseminators, setInseminators] = useState<string[]>(['Tech A', 'Tech B', 'Vet Service']);
+  
   const [selectedCowId, setSelectedCowId] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'HOME' | 'HERD' | 'PROTOCOLS' | 'REPORTS' | 'INSEMINATION' | 'SETTINGS' | 'USERS'>('HOME');
 
@@ -53,6 +57,11 @@ export default function App() {
   const [dateFormat, setDateFormat] = useState<DateFormat>(() => {
     return (localStorage.getItem('dh_dateFormat') as DateFormat) || 'EU';
   });
+
+  // Settings UI State
+  const [settingsTab, setSettingsTab] = useState<'GENERAL' | 'LISTS'>('GENERAL');
+  const [newManager, setNewManager] = useState('');
+  const [newInseminator, setNewInseminator] = useState('');
 
   useEffect(() => {
     localStorage.setItem('dh_language', language);
@@ -102,7 +111,6 @@ export default function App() {
     const found = cows.find(c => c.id === id);
     if (found) {
       setSelectedCowId(id);
-      // Ensure we are on a view where selecting makes sense, or just rely on modal
     } else {
       showNotification(`Cow ${id} not found.`, 'error');
     }
@@ -113,6 +121,24 @@ export default function App() {
     showNotification(`Successfully imported ${newCows.length} records.`);
   };
 
+  // Staff Management Handlers
+  const addManager = () => {
+    if(newManager && !managers.includes(newManager)) {
+      setManagers([...managers, newManager]);
+      setNewManager('');
+    }
+  }
+  const removeManager = (name: string) => setManagers(managers.filter(m => m !== name));
+
+  const addInseminator = () => {
+    if(newInseminator && !inseminators.includes(newInseminator)) {
+      setInseminators([...inseminators, newInseminator]);
+      setNewInseminator('');
+    }
+  }
+  const removeInseminator = (name: string) => setInseminators(inseminators.filter(i => i !== name));
+
+
   const selectedCow = cows.find(c => c.id === selectedCowId);
   const selectedCowEvents = events.filter(e => e.cowId === selectedCowId);
 
@@ -121,61 +147,55 @@ export default function App() {
     <div className="flex-1 p-6 flex flex-col h-full overflow-hidden">
       <h1 className="text-2xl font-display font-bold text-neutral-800 mb-4 flex-shrink-0">{t.title}</h1>
       
-      <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 auto-rows-min overflow-y-auto pb-4">
+      {/* Grid Layout: 4 Columns for smaller cards */}
+      <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 overflow-y-auto pb-4 content-start">
         
         {/* Herd Status Card */}
         <div 
           onClick={() => setCurrentView('HERD')}
-          className="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-all cursor-pointer group hover:-translate-y-1 flex flex-col justify-between"
+          className="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-all cursor-pointer group hover:-translate-y-1 flex flex-col justify-center h-40"
         >
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-primary-100 rounded-lg text-primary-600 shrink-0">
-              <LayoutDashboard className="w-6 h-6" />
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary-100 rounded-lg text-primary-600 shrink-0">
+              <LayoutDashboard className="w-8 h-8" />
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-display font-bold text-lg text-neutral-800 truncate">{t.herdCard}</h3>
-              <p className="text-neutral-500 text-xs line-clamp-2">{t.herdSubtitle}</p>
+              <p className="text-neutral-500 text-xs line-clamp-2 mt-1">{t.herdSubtitle}</p>
             </div>
             <ArrowRight className="w-5 h-5 text-neutral-300 group-hover:text-primary-500 transition-colors shrink-0" />
-          </div>
-          <div className="flex gap-2 mt-3 pt-3 border-t border-neutral-50">
-            <span className="bg-green-100 text-green-700 text-[10px] uppercase px-2 py-1 rounded font-bold">{cows.filter(c => c.reproStatus === 'PREG').length} PREG</span>
-            <span className="bg-red-100 text-red-700 text-[10px] uppercase px-2 py-1 rounded font-bold">{cows.filter(c => c.reproStatus === 'OPEN').length} OPEN</span>
           </div>
         </div>
 
         {/* Protocols Card */}
         <div 
           onClick={() => setCurrentView('PROTOCOLS')}
-          className="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-all cursor-pointer group hover:-translate-y-1 flex flex-col justify-between"
+          className="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-all cursor-pointer group hover:-translate-y-1 flex flex-col justify-center h-40"
         >
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-violet-100 rounded-lg text-violet-600 shrink-0">
-              <ClipboardList className="w-6 h-6" />
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-violet-100 rounded-lg text-violet-600 shrink-0">
+              <ClipboardList className="w-8 h-8" />
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-display font-bold text-lg text-neutral-800 truncate">{t.protocolsCard}</h3>
-              <p className="text-neutral-500 text-xs line-clamp-2">{t.protocolsSubtitle}</p>
+              <p className="text-neutral-500 text-xs line-clamp-2 mt-1">{t.protocolsSubtitle}</p>
             </div>
             <ArrowRight className="w-5 h-5 text-neutral-300 group-hover:text-violet-500 transition-colors shrink-0" />
-          </div>
-           <div className="mt-3 pt-3 border-t border-neutral-50">
-            <span className="bg-violet-50 text-violet-700 text-[10px] uppercase px-2 py-1 rounded font-bold">{protocolInstances.filter(p => p.status === 'ACTIVE').length} Active</span>
           </div>
         </div>
 
         {/* Insemination Card */}
         <div 
            onClick={() => setCurrentView('INSEMINATION')}
-           className="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-all cursor-pointer group hover:-translate-y-1 flex flex-col justify-between"
+           className="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-all cursor-pointer group hover:-translate-y-1 flex flex-col justify-center h-40"
         >
-          <div className="flex items-center gap-4 h-full">
-            <div className="p-3 bg-pink-100 rounded-lg text-pink-600 shrink-0">
-              <TestTube2 className="w-6 h-6" />
+          <div className="flex items-center gap-3 h-full">
+            <div className="p-2 bg-pink-100 rounded-lg text-pink-600 shrink-0">
+              <TestTube2 className="w-8 h-8" />
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-display font-bold text-lg text-neutral-800 truncate">{t.insemCard}</h3>
-              <p className="text-neutral-500 text-xs line-clamp-2">{t.insemSubtitle}</p>
+              <p className="text-neutral-500 text-xs line-clamp-2 mt-1">{t.insemSubtitle}</p>
             </div>
             <ArrowRight className="w-5 h-5 text-neutral-300 group-hover:text-pink-500 transition-colors shrink-0" />
           </div>
@@ -184,51 +204,17 @@ export default function App() {
         {/* Reports Card */}
         <div 
            onClick={() => setCurrentView('REPORTS')}
-           className="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-all cursor-pointer group hover:-translate-y-1 flex flex-col justify-between"
+           className="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-all cursor-pointer group hover:-translate-y-1 flex flex-col justify-center h-40"
         >
-          <div className="flex items-center gap-4 h-full">
-            <div className="p-3 bg-amber-100 rounded-lg text-amber-600 shrink-0">
-              <Syringe className="w-6 h-6" />
+          <div className="flex items-center gap-3 h-full">
+            <div className="p-2 bg-amber-100 rounded-lg text-amber-600 shrink-0">
+              <Syringe className="w-8 h-8" />
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-display font-bold text-lg text-neutral-800 truncate">{t.reportsCard}</h3>
-              <p className="text-neutral-500 text-xs line-clamp-2">{t.reportsSubtitle}</p>
+              <p className="text-neutral-500 text-xs line-clamp-2 mt-1">{t.reportsSubtitle}</p>
             </div>
             <ArrowRight className="w-5 h-5 text-neutral-300 group-hover:text-amber-500 transition-colors shrink-0" />
-          </div>
-        </div>
-
-        {/* Users Card */}
-        <div 
-           onClick={() => setCurrentView('USERS')}
-           className="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-all cursor-pointer group hover:-translate-y-1 flex flex-col justify-between"
-        >
-          <div className="flex items-center gap-4 h-full">
-            <div className="p-3 bg-neutral-100 rounded-lg text-neutral-600 shrink-0">
-              <Users className="w-6 h-6" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-display font-bold text-lg text-neutral-800 truncate">{t.usersCard}</h3>
-              <p className="text-neutral-500 text-xs line-clamp-2">{t.usersSubtitle}</p>
-            </div>
-             <ArrowRight className="w-5 h-5 text-neutral-300 group-hover:text-neutral-500 transition-colors shrink-0" />
-          </div>
-        </div>
-
-        {/* Settings Card */}
-        <div 
-           onClick={() => setCurrentView('SETTINGS')}
-           className="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-all cursor-pointer group hover:-translate-y-1 flex flex-col justify-between"
-        >
-           <div className="flex items-center gap-4 h-full">
-            <div className="p-3 bg-neutral-100 rounded-lg text-neutral-600 shrink-0">
-              <Settings className="w-6 h-6" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-display font-bold text-lg text-neutral-800 truncate">{t.settingsCard}</h3>
-              <p className="text-neutral-500 text-xs line-clamp-2">{t.settingsSubtitle}</p>
-            </div>
-             <ArrowRight className="w-5 h-5 text-neutral-300 group-hover:text-neutral-500 transition-colors shrink-0" />
           </div>
         </div>
 
@@ -254,7 +240,7 @@ export default function App() {
 
       {/* Detail Modal Overlay */}
       {selectedCow && (
-        <div className="fixed inset-0 z-50 bg-neutral-900/40 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100] bg-neutral-900/40 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
            <div className="w-full max-w-5xl animate-in zoom-in-95 duration-200">
               <CowDetail 
                 cow={selectedCow} 
@@ -298,6 +284,9 @@ export default function App() {
               onSelectCow={handleSelectCow}
               language={language}
               dateFormat={dateFormat}
+              availableManagers={managers}
+              availableInseminators={inseminators}
+              onNotify={showNotification}
             />
           )}
           {currentView === 'REPORTS' && (
@@ -319,33 +308,113 @@ export default function App() {
             </div>
           )}
           {currentView === 'SETTINGS' && (
-            <div className="p-8 max-w-2xl mx-auto w-full overflow-y-auto">
-              <h2 className="text-2xl font-display font-bold text-neutral-800 mb-6">{translations[language].settings.title}</h2>
-              <div className="bg-white p-8 rounded-2xl shadow-sm border border-neutral-200 space-y-8">
-                <div>
-                  <label className="block text-sm font-bold text-neutral-700 mb-3">{translations[language].settings.language}</label>
-                  <select 
-                    className="w-full border border-neutral-300 rounded-lg p-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value as Language)}
-                  >
-                    <option value="EN">English</option>
-                    <option value="FR">Français</option>
-                  </select>
+            <div className="flex-1 flex flex-col bg-neutral-50 p-6 overflow-hidden">
+                <div className="max-w-4xl mx-auto w-full h-full flex flex-col">
+                   <h2 className="text-2xl font-display font-bold text-neutral-800 mb-6">{translations[language].settings.title}</h2>
+                   
+                   {/* Tabs */}
+                   <div className="flex gap-2 mb-4 bg-white p-1 rounded-xl w-fit border border-neutral-200 shadow-sm">
+                      <button 
+                        onClick={() => setSettingsTab('GENERAL')}
+                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${settingsTab === 'GENERAL' ? 'bg-neutral-900 text-white' : 'text-neutral-500 hover:bg-neutral-100'}`}
+                      >
+                        General
+                      </button>
+                      <button 
+                        onClick={() => setSettingsTab('LISTS')}
+                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${settingsTab === 'LISTS' ? 'bg-neutral-900 text-white' : 'text-neutral-500 hover:bg-neutral-100'}`}
+                      >
+                        Lists & Staff
+                      </button>
+                   </div>
+
+                   {/* Content */}
+                   <div className="flex-1 overflow-y-auto bg-white rounded-2xl shadow-sm border border-neutral-200 p-8">
+                      {settingsTab === 'GENERAL' && (
+                         <div className="space-y-8 max-w-lg">
+                            <div>
+                              <label className="block text-sm font-bold text-neutral-700 mb-3">{translations[language].settings.language}</label>
+                              <select 
+                                className="w-full border border-neutral-300 rounded-lg p-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                value={language}
+                                onChange={(e) => setLanguage(e.target.value as Language)}
+                              >
+                                <option value="EN">English</option>
+                                <option value="FR">Français</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-bold text-neutral-700 mb-3">{translations[language].settings.dateFormat}</label>
+                              <select 
+                                className="w-full border border-neutral-300 rounded-lg p-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                value={dateFormat}
+                                onChange={(e) => setDateFormat(e.target.value as DateFormat)}
+                              >
+                                <option value="EU">DD/MM/YYYY</option>
+                                <option value="US">MM/DD/YYYY</option>
+                                <option value="ISO">YYYY-MM-DD</option>
+                              </select>
+                            </div>
+                         </div>
+                      )}
+
+                      {settingsTab === 'LISTS' && (
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                            {/* Managers */}
+                            <div>
+                               <h3 className="text-lg font-bold text-neutral-800 mb-4 flex items-center gap-2">
+                                 <Users className="w-5 h-5 text-neutral-400" /> Protocol Managers
+                               </h3>
+                               <div className="flex gap-2 mb-4">
+                                  <input 
+                                    className="flex-1 border border-neutral-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500"
+                                    placeholder="Add Name..."
+                                    value={newManager}
+                                    onChange={e => setNewManager(e.target.value)}
+                                  />
+                                  <button onClick={addManager} className="bg-neutral-900 text-white p-2 rounded-lg hover:bg-neutral-800">
+                                     <Plus className="w-4 h-4" />
+                                  </button>
+                               </div>
+                               <ul className="space-y-2">
+                                  {managers.map((m, idx) => (
+                                    <li key={idx} className="flex justify-between items-center p-3 bg-neutral-50 rounded-lg border border-neutral-100">
+                                       <span className="text-sm font-medium text-neutral-700">{m}</span>
+                                       <button onClick={() => removeManager(m)} className="text-neutral-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                                    </li>
+                                  ))}
+                               </ul>
+                            </div>
+
+                            {/* Inseminators */}
+                            <div>
+                               <h3 className="text-lg font-bold text-neutral-800 mb-4 flex items-center gap-2">
+                                 <TestTube2 className="w-5 h-5 text-neutral-400" /> Inseminators
+                               </h3>
+                               <div className="flex gap-2 mb-4">
+                                  <input 
+                                    className="flex-1 border border-neutral-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500"
+                                    placeholder="Add Name..."
+                                    value={newInseminator}
+                                    onChange={e => setNewInseminator(e.target.value)}
+                                  />
+                                  <button onClick={addInseminator} className="bg-neutral-900 text-white p-2 rounded-lg hover:bg-neutral-800">
+                                     <Plus className="w-4 h-4" />
+                                  </button>
+                               </div>
+                               <ul className="space-y-2">
+                                  {inseminators.map((i, idx) => (
+                                    <li key={idx} className="flex justify-between items-center p-3 bg-neutral-50 rounded-lg border border-neutral-100">
+                                       <span className="text-sm font-medium text-neutral-700">{i}</span>
+                                       <button onClick={() => removeInseminator(i)} className="text-neutral-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                                    </li>
+                                  ))}
+                               </ul>
+                            </div>
+                         </div>
+                      )}
+                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-bold text-neutral-700 mb-3">{translations[language].settings.dateFormat}</label>
-                  <select 
-                    className="w-full border border-neutral-300 rounded-lg p-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    value={dateFormat}
-                    onChange={(e) => setDateFormat(e.target.value as DateFormat)}
-                  >
-                    <option value="EU">DD/MM/YYYY</option>
-                    <option value="US">MM/DD/YYYY</option>
-                    <option value="ISO">YYYY-MM-DD</option>
-                  </select>
-                </div>
-              </div>
             </div>
           )}
           {currentView === 'USERS' && (
@@ -365,12 +434,6 @@ export default function App() {
                       <tr>
                         <td className="p-4 text-sm font-medium text-neutral-800">John Doe</td>
                         <td className="p-4 text-sm text-neutral-500">Admin</td>
-                        <td className="p-4"><span className="bg-green-100 text-green-700 px-2.5 py-1 rounded-md text-xs font-bold">Active</span></td>
-                        <td className="p-4 text-sm text-primary-600 cursor-pointer hover:underline font-medium">Edit</td>
-                      </tr>
-                      <tr>
-                        <td className="p-4 text-sm font-medium text-neutral-800">Jane Smith</td>
-                        <td className="p-4 text-sm text-neutral-500">Herdsman</td>
                         <td className="p-4"><span className="bg-green-100 text-green-700 px-2.5 py-1 rounded-md text-xs font-bold">Active</span></td>
                         <td className="p-4 text-sm text-primary-600 cursor-pointer hover:underline font-medium">Edit</td>
                       </tr>

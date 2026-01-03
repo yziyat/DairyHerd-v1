@@ -1,3 +1,4 @@
+
 export type Language = 'EN' | 'FR';
 export type DateFormat = 'ISO' | 'US' | 'EU';
 
@@ -74,7 +75,7 @@ export const translations = {
       title: 'Protocol Management',
       subtitle: 'Reproduction synchronization & treatment tracking',
       tabs: {
-        definitions: 'Definitions',
+        definitions: 'Set up',
         planning: 'Planning',
         inProgress: 'In Progress',
         completed: 'Completed'
@@ -156,7 +157,7 @@ export const translations = {
       title: 'Gestion des Protocoles',
       subtitle: 'Synchronisation & traitements',
       tabs: {
-        definitions: 'Définitions',
+        definitions: 'Configuration',
         planning: 'Planification',
         inProgress: 'En Cours',
         completed: 'Terminés'

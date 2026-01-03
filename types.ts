@@ -69,9 +69,10 @@ export interface ProtocolInstance {
   startDate: string; // ISO Date
   manager: string;
   inseminator: string;
-  status: 'ACTIVE' | 'COMPLETED';
+  status: 'ACTIVE' | 'COMPLETED' | 'CANCELED';
   completedStepIndices: number[]; // Array of step indices that are done
   snapshotSteps?: ProtocolStep[]; // Versioning: Steps as they were when instance started
+  notes?: string; // Observations for this specific cow's protocol run
 }
 
 export interface AppState {

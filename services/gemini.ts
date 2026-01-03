@@ -45,14 +45,16 @@ export async function askHerdConsultant(
       `;
     }
 
+    // Fix: Updated model to 'gemini-3-pro-preview' for complex text tasks (herd consulting)
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3-pro-preview',
       contents: question,
       config: {
         systemInstruction: systemContext,
       }
     });
 
+    // Fix: Use the .text property directly from GenerateContentResponse
     return response.text;
   } catch (error) {
     console.error("Gemini Error:", error);
